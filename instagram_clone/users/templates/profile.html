@@ -1,0 +1,391 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Profile</title>
+    <link rel="stylesheet" href="{% static 'users/css/profiles.css' %}" />
+    <script>
+      const MEDIA_URL = "{{ MEDIA_URL }}";
+    </script>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <div class="profile">
+          <div class="profile-image">
+            <img
+              src="{{ user_profile.profile_pic.url }}"
+              alt="Profile Picture"
+            />
+          </div>
+          <div class="profile-user-settings">
+            <h1 class="profile-user-name">{{ user_profile.username }}</h1>
+            {% if user_profile.id == request.user.id %}
+            <a href="{% url 'edit_profile' %}">
+              <button class="btn profile-edit-btn">Edit Profile</button>
+            </a>
+            <a href="{% url 'logout' %}">
+              <button class="btn profile-edit-btn">Logout</button>
+            </a>
+            <button class="btn profile-edit-btn" id="addPostButton">
+              Add post
+            </button>
+            {% else %} {% if user_profile.id in following %}
+            <button class="action-btn unfollow-btn" data-userid="{{ user_profile.id }}">
+              Unfollow
+            </button>
+            {% else %}
+            <button class="action-btn follow-btn" data-userid="{{ user_profile.id }}">
+              Follow
+            </button>
+            {% endif %} {% endif %}
+            <button
+              class="btn profile-settings-btn"
+              aria-label="profile settings"
+            >
+              <i class="fas fa-cog" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="profile-stats">
+            <ul>
+              <li>
+                <span class="profile-stat-count"
+                  >{{ posts_count|default:0 }}</span
+                >
+                posts
+              </li>
+              <li>
+                <a
+                  href="#"
+                  id="followers-btn"
+                  data-userid="{{ user_profile.id }}"
+                  ><span class="profile-stat-count">{{ user_followers }}</span>
+                  followers</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#"
+                  id="following-btn"
+                  data-userid="{{ user_profile.id }}"
+                  ><span class="profile-stat-count">{{ user_following }}</span>
+                  following</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="profile-bio">
+            <p>
+              <span class="profile-real-name">{{ user_profile.username }}</span>
+              {{ user_profile.bio }}
+            </p>
+          </div>
+          <div id="userModal" class="modal">
+            <div class="modal-content">
+              <span class="close">&times;</span>
+              <h2 id="modal-title"></h2>
+              <div id="user-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <div class="gallery" id="gallery-id-main">
+          {% for post in user_posts %}
+          <div class="gallery-item" tabindex="0">
+              <a href="{% url 'view_post_detail' post.id %}" previewlistener="true">
+                  <img src="{{ post.image.url }}" class="gallery-image" alt="{{ post.caption }}" />
+                
+              <div class="gallery-item-info">
+                  <ul>
+                      <li class="gallery-item-likes">
+                          <span >Likes:</span><i class="fas fa-heart" aria-hidden="true"></i> {{ post.likes.count }}
+                      </li>
+                      <li class="gallery-item-comments">
+                          <span >Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> {{ post.comments.count }}
+                      </li>
+                  </ul>
+              </div>
+            </a>
+          </div>
+          {% endfor %}
+          <div class="gallery" id="gallery-id">
+            {% if is_following %}
+            {% for post in other_users_posts %}
+            <div class="gallery-item" id="gallery-item-id" tabindex="0">
+              <img src="{{ post.image.url }}" class="gallery-image" alt="{{ post.caption }}" />
+      
+              <div class="gallery-item-info">
+                <ul>
+                  <li class="gallery-item-likes">
+                    <span class="visually-hidden">Likes1:</span><i class="fas fa-heart" aria-hidden="true"></i> {{ userPosts.likes.count }}
+                  </li>
+                  <li class="gallery-item-comments">
+                    <span class="visually-hidden">Comments:</span><i class="fas fa-comment" aria-hidden="true"></i> {{ userPosts.comments.count }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            {% if user_profile.id != request.user.id and user_profile.id not in following %}
+            <div class="follow-to-view">
+                <p>Follow <a href="/users/{{ user_profile.id }}">{{ user_profile.username }}</a> to view their posts.</p>
+            </div>
+            {% endif %}
+            
+          {% endif %}
+          </div>
+        
+        </div>
+      </div>
+    </main>
+
+    <!-- Add Post Modal -->
+    <div id="addPostModal" class="modal-post">
+      <div class="modal-content-post">
+        <span class="close-post">&times;</span>
+        <h2>Add New Post</h2>
+        <form id="addPostForm" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <label for="caption">Caption:</label><br />
+          <textarea id="caption" name="caption" rows="4" cols="50"></textarea
+          ><br />
+          <label for="image">Select image:</label><br />
+          <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/*"
+          /><br /><br />
+          <button type="submit" class="addPostButton">Post</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const csrfToken = "{{ csrf_token }}";
+
+        // Modal Elements
+        const userModal = document.getElementById("userModal");
+        const userModalTitle = document.getElementById("modal-title");
+        const userList = document.getElementById("user-list");
+        const closeUserModalBtn = document.querySelector("#userModal .close");
+
+        const addPostBtn = document.getElementById("addPostButton");
+        const addPostModal = document.getElementById("addPostModal");
+        const closeAddPostBtn = document.querySelector(
+          "#addPostModal .close-post"
+        );
+
+        // Functions to handle modals
+        function openModal(modal) {
+          modal.style.display = "block";
+        }
+
+        function closeModal(modal) {
+          modal.style.display = "none";
+        }
+
+        if (addPostBtn && addPostModal && closeAddPostBtn) {
+          addPostBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            openModal(addPostModal);
+          });
+
+          closeAddPostBtn.addEventListener("click", () => {
+            closeModal(addPostModal);
+          });
+
+          const postForm = document.getElementById("addPostForm");
+          if (postForm) {
+            postForm.addEventListener("submit", function (event) {
+              event.preventDefault();
+              const formData = new FormData(postForm);
+              fetch("/posts/add-posts/", {
+                method: "POST",
+                body: formData,
+                headers: {
+                  "X-Requested-With": "XMLHttpRequest",
+                  "X-CSRFToken": csrfToken,
+                },
+              })
+                .then((response) => response.json())
+                .then((response) => {
+                  if (response.success) {
+                    console.log("Post added successfully");
+                    closeModal(addPostModal);
+                  } else {
+                    console.error("Error adding post:", response.statusText);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Network error:", error);
+                });
+            });
+          }
+        }
+
+        // Function to open user modal
+        function openUserModal(title, users, type) {
+          userModalTitle.textContent = title;
+          userList.innerHTML = "";
+          users.forEach((user) => {
+            const userDiv = document.createElement("div");
+            userDiv.classList.add("user-card");
+
+            const profilePic =
+              type === "followers"
+                ? user["user_from__profile_pic"]
+                : user["user_to__profile_pic"];
+            const userId =
+              type === "followers"
+                ? user["user_from__id"]
+                : user["user_to__id"];
+            const username =
+              type === "followers"
+                ? user["user_from__username"]
+                : user["user_to__username"];
+
+            const profilePicUrl = MEDIA_URL + profilePic;
+
+            userDiv.innerHTML = `
+                        <a href="/users/${userId}" class="profile-link">
+                          <img src="${profilePicUrl}" alt="profile picture" />
+                        </a> 
+                        <a href="/users/${userId}" class="profile-link">${username}</a>
+                    `;
+            userList.appendChild(userDiv);
+          });
+          openModal(userModal);
+        }
+
+        // Fetch and display followers
+        function fetchFollowers(userId) {
+          fetch(`/followers/${userId}/`)
+            .then((response) => response.json())
+            .then((data) => {
+              openUserModal("Followers", data.followers, "followers");
+            });
+        }
+
+        // Fetch and display following
+        function fetchFollowing(userId) {
+          fetch(`/following/${userId}/`)
+            .then((response) => response.json())
+            .then((data) => {
+              openUserModal("Following", data.following, "following");
+            });
+        }
+
+        // Event listeners for followers and following buttons
+        const followersBtn = document.getElementById("followers-btn");
+        const followingBtn = document.getElementById("following-btn");
+
+        if (followersBtn) {
+          followersBtn.addEventListener("click", function () {
+            const userId = this.getAttribute("data-userid");
+            fetchFollowers(userId);
+          });
+        }
+
+        if (followingBtn) {
+          followingBtn.addEventListener("click", function () {
+            const userId = this.getAttribute("data-userid");
+            fetchFollowing(userId);
+          });
+        }
+
+        if (closeUserModalBtn) {
+          closeUserModalBtn.addEventListener("click", () => {
+            closeModal(userModal);
+          });
+        }
+
+        window.addEventListener("click", function (event) {
+          if (event.target == userModal) {
+            closeModal(userModal);
+          } else if (event.target == addPostModal) {
+            closeModal(addPostModal);
+          }
+        });
+
+        // Follow/Unfollow handlers
+        function handleFollow(button) {
+          const userId = button.dataset.userid;
+          fetch(`/follow/${userId}/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken,
+            },
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                button.textContent = "Unfollow";
+                button.classList.remove("follow-btn");
+                button.classList.add("unfollow-btn");
+                button.removeEventListener("click", followListener);
+                button.addEventListener("click", unfollowListener);
+                window.location.reload()
+              } else {
+                alert("You are already following this user.");
+              }
+            });
+        }
+
+        function handleUnfollow(button) {
+          const userId = button.dataset.userid;
+          fetch(`/unfollow/${userId}/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken,
+            },
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                button.textContent = "Follow";
+                button.classList.remove("unfollow-btn");
+                button.classList.add("follow-btn");
+                button.removeEventListener("click", unfollowListener);
+                button.addEventListener("click", followListener);
+                const gallery=document.getElementById("gallery-id")
+                const gallery_main=document.getElementById("gallery-id-main")
+                console.log(gallery)
+                gallery.style.display="none"
+                gallery_main.style.display="none"
+                window.location.reload()
+              } else {
+                alert("You are not following this user.");
+              }
+            });
+        }
+
+        function followListener() {
+          handleFollow(this);
+        }
+
+        function unfollowListener() {
+          handleUnfollow(this);
+        }
+
+        document.querySelectorAll(".follow-btn").forEach((button) => {
+          button.addEventListener("click", followListener);
+        });
+
+        document.querySelectorAll(".unfollow-btn").forEach((button) => {
+          button.addEventListener("click", unfollowListener);
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,336 @@
+.right-col {
+    padding: 20px;
+}
+
+.profile-card {
+    width: fit-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.profile-card .profile-pic {
+    flex: 0 0 auto;
+    padding: 0;
+    background: none;
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+}
+
+.profile-card:first-child .profile-pic {
+    width: 70px;
+    height: 70px;
+}
+
+.profile-card .profile-pic img {
+    border: none;
+}
+
+.profile-card .username {
+    font-weight: 500;
+    font-size: 14px;
+    color: #000;
+}
+
+.sub-text {
+    color: rgba(0, 0, 0, 0.5);
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 5px;
+}
+
+.action-btn {
+    opacity: 1;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.suggestion-text {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.5);
+    font-weight: 700;
+    margin: 20px 0;
+}
+
+.post {
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    border: 1px solid #dbdbdb;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #fff;
+    margin-bottom: 20px;
+}
+
+.post .info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+.post .info .user {
+    display: flex;
+    align-items: center;
+}
+
+.post .info .profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.post .info .profile-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.post .info .username {
+    margin-left: 10px;
+    font-weight: 600;
+}
+
+.post .info .options-container {
+    position: relative;
+}
+
+.post .info .options {
+    cursor: pointer;
+}
+
+.post .post-image-wrapper {
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.post .post-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.post .post-content {
+    padding: 10px;
+}
+
+.post .reaction-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.post .reaction-wrapper .icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.post .likes {
+    font-weight: 600;
+}
+
+.post .description {
+    margin: 10px 0;
+}
+
+.post .description span {
+    font-weight: 600;
+    margin-right: 5px;
+}
+
+.post .post-time {
+    color: #8e8e8e;
+    font-size: 12px;
+}
+
+.post .comment-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-top: 1px solid #dbdbdb;
+}
+
+.post .comment-wrapper .icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+}
+
+.post .comment-wrapper .comment-box {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+}
+
+.post .comment-wrapper .comment-btn {
+    background-color: transparent;
+    border: none;
+    color: #0095f6;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.post-options {
+    position: absolute;
+    right: 0;
+    top: 20px;
+    background: white;
+    border: 1px solid #dbdbdb;
+    border-radius: 5px;
+    overflow: hidden;
+    display: none;
+    z-index: 10;
+}
+
+.post-options button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background: white;
+    cursor: pointer;
+    text-align: left;
+}
+
+.post-options button:hover {
+    background: #fafafa;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+}
+
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* like button */
+
+.like-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .like-icon {
+    width: 24px; /* Adjust size as needed */
+    height: 24px; /* Adjust size as needed */
+  }
+
+
+  /* comment form */
+.comment {
+    position: relative;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+  }
+  
+  .comment button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  
+  .comment input[type="text"] {
+    width: 70%;
+    padding: 5px;
+  }
+  
+  /* Style for nested (reply) comment form */
+  .comment-content {
+    margin-left: 20px; /* Indent the nested reply */
+    padding: 5px;
+    background-color: #eaeaea;
+  }
+  
+  .comment-content .username {
+    font-weight: bold;
+    color: #007bff;
+  }
+
+.comment .reply-btn,
+.comment .delete-btn {
+    margin-right: 10px;
+    cursor: pointer;
+    background: none;
+    color: grey;
+    /* text-decoration: underline; */
+}
+.comment .reply-btn{
+  margin-right: 20%;
+}
+
+  
+
+
+@media (max-width: 1100px) {
+    .right-col, .search-box {
+        display: none;
+    }
+    .nav-wrapper,
+    .wrapper {
+        width: 90%;
+    }
+    .wrapper {
+        display: block;
+    }
+}
+
+@media (max-width: 500px) {
+    .nav-items .icon {
+        margin: 0 5px;
+    }
+    .post-image-wrapper {
+        height: 300px;
+    }
+}
+
+

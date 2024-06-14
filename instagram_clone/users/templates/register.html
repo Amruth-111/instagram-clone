@@ -1,0 +1,79 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Registration</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="{% static 'users/css/register.css' %}" />
+  </head>
+  <body>
+    <main>
+      <div class="page">
+        <div class="header">
+          <h1 class="logo">Instagram</h1>
+          <p>Sign up to see photos and videos from your friends.</p>
+          <div>
+            <hr />
+            <p>OR</p>
+            <hr />
+          </div>
+        </div>
+        <div class="container">
+          {% if messages %} {% for message in messages %}
+          <p
+            style="color: {% if message.tags == 'error' %}red{% else %}green{% endif %};"
+          >
+            {{ message }}
+          </p>
+          {% endfor %} {% endif %}
+          <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="email" placeholder="Email" name="email" required />
+            <input
+              type="text"
+              placeholder="Full Name"
+              name="username"
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              name="password"
+              required
+            />
+            <label for="profile_pic">Profile Picture:</label>
+            <input
+              type="file"
+              id="profile_pic"
+              name="profile_pic"
+              accept="image/*"
+            />
+            <button type="submit">Sign up</button>
+          </form>
+          <ul>
+            <li>By signing up, you agree to our</li>
+            <li><a href="">Terms</a></li>
+            <li><a href="">Data Policy</a></li>
+            <li>and</li>
+            <li><a href="">Cookies Policy</a>.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="option">
+        <p>Have an account? <a href="{% url 'login' %}">Log in</a></p>
+      </div>
+      <div class="otherapps">
+        <p>Get the app.</p>
+        <button type="button"><i class="fab fa-apple"></i> App Store</button>
+        <button type="button">
+          <i class="fab fa-google-play"></i> Google Play
+        </button>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,726 @@
+{% load static %} {% load likes_extras %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Home</title>
+    <link rel="stylesheet" href="{% static 'users/css/home.css' %}" />
+    <script>
+      const likeRedUrl = "{% static 'users/css/img/like-red.png' %}";
+      const likeUrl = "{% static 'users/css/img/like.PNG' %}";
+
+        const currentUserId = {{ current_user_id }};
+    </script>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-wrapper">
+        <img
+          src="{% static 'users/css/img/logo.PNG' %}"
+          class="brand-img"
+          alt="logo"
+        />
+        <input
+          type="text"
+          class="search-box"
+          placeholder="search"
+          id="searchInput"
+          onkeypress="handleSearchKeyPress(event)"
+        />
+        <div class="nav-items">
+          <img
+            src="{% static 'users/css/img/home.PNG' %}"
+            class="icon"
+            alt="home"
+          />
+          <img
+            src="{% static 'users/css/img/messenger.PNG' %}"
+            class="icon"
+            alt="messenger"
+          />
+          <a href="#" id="addPostButton">
+            <img
+              src="{% static 'users/css/img/add.PNG' %}"
+              class="icon"
+              alt="add"
+            />
+          </a>
+          <img
+            src="{% static 'users/css/img/explore.PNG' %}"
+            class="icon"
+            alt="explore"
+          />
+          <img
+            src="{% static 'users/css/img/like.PNG' %}"
+            class="icon"
+            alt="like"
+          />
+          <a href="{% url 'profile' %}">
+            <div
+              style="background-image: url('{{ current_user.profile_pic.url }}');"
+              class="icon user-profile"
+              name="user-profile"
+            ></div>
+          </a>
+        </div>
+      </div>
+    </nav>
+    <section class="main">
+      <div class="wrapper">
+        <div class="left-col">
+          {% comment %}
+          <h1>Welcome, {{ current_user.username }}!</h1>
+          {% endcomment %}
+          <h3 id="post-added"></h3>
+          <div class="follow-card">
+            <h1 id="follow-to-view-photos">
+              Follow your friends to view their posts
+            </h1>
+          </div>
+          <!-- Post elements go here -->
+          {% for post in all_user_posts %}
+          <div class="post" id="{{post.id}}">
+            <div class="info">
+              <div class="user">
+                <a href="{% url 'view_user_profile' user.id %}">
+                <div class="profile-pic" >
+                  <img
+                    src="{{ post.user.profile_pic.url }}"
+                    alt="{{ post.user.username }}"
+                  />
+                </div>
+                <p class="username">{{ post.user.username }}</p>
+              </a>
+              </div>
+
+              <img
+                src="{% static 'users/css/img/option.PNG' %}"
+                class="options"
+                alt="options"
+              />
+            </div>
+            <img
+              src="{{ post.image.url }}"
+              class="post-image"
+              alt="post image"
+            />
+            <div class="post-content">
+              <div class="reaction-wrapper">
+                <button class="like-btn" onclick="toggleLike({{ post.id }})">
+                  {% if post|has_liked:request.user %}
+                  <img
+                    src="{% static 'users/css/img/like-red.png' %}"
+                    class="icon like-icon"
+                    alt="liked"
+                    id="likeBtn_{{ post.id }}"
+                  />
+                  {% else %}
+                  <img
+                    src="{% static 'users/css/img/like.PNG' %}"
+                    class="icon like-icon"
+                    alt="like"
+                    id="likeBtn_{{ post.id }}"
+                  />
+                  {% endif %}
+                </button>
+                {% comment %}
+                <span id="likeCount_{{ post.id }}">{{ post.total_likes }}</span>
+                {% endcomment %}
+                <img
+                  src="{% static 'users/css/img/comment.PNG' %}"
+                  class="icon comment-icon"
+                  alt="comment"
+                  data-postid="{{ post.id }}"
+                  onclick="handleCommentIconClick({{ post.id }})"
+                />
+                <img
+                  src="{% static 'users/css/img/send.PNG' %}"
+                  class="icon"
+                  alt="send"
+                />
+                <img
+                  src="{% static 'users/css/img/save.PNG' %}"
+                  class="save icon"
+                  alt="save"
+                />
+              </div>
+              <p class="likes" id="likeCount_{{ post.id }}">
+                {{ post.total_likes }} likes
+              </p>
+              <p id="comments-count"></p>
+              <p class="description">
+                <span>{{ post.user.username }}</span> {{ post.caption }}
+              </p>
+              <p class="post-time">{{ post.created_at|timesince }} ago</p>
+            </div>
+
+            <div class="comments" id="commentList_{{ post.id }}">
+              <!-- Comments will be dynamically loaded here -->
+            </div>
+
+            <div class="comment-wrapper">
+              <img
+                src="{% static 'users/css/img/smile.PNG' %}"
+                class="icon"
+                alt="smile"
+              />
+              <input
+                type="text"
+                class="comment-box"
+                placeholder="Add a comment"
+                id="commentInput_{{ post.id }}"
+                name="comments"
+              />
+              <button class="comment-btn" onclick="addComment({{ post.id }})">
+                Post
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+          <!-- Repeat post elements as needed -->
+        </div>
+        <div class="right-col">
+          <div class="profile-card">
+            <div class="profile-pic">
+              <a href="{% url 'profile' %}">
+                <img src="{{ current_user.profile_pic.url }}" alt="" />
+              </a>
+            </div>
+            <div>
+              <p class="username">{{ current_user.username }}</p>
+              <p class="sub-text">
+                {{ current_user.first_name }} {{ current_user.last_name }}
+              </p>
+            </div>
+            <button class="action-btn">switch</button>
+          </div>
+          <p class="suggestion-text">Suggestions for you</p>
+          {% for user in users %}
+          <div>
+            <div class="profile-card">
+              <a href="{% url 'view_user_profile' user.id %}">
+                <div class="profile-pic">
+                  {% if user.profile_pic %}
+                  <img src="{{ user.profile_pic.url }}" alt="profile picture" />
+                  {% else %}
+                  <img
+                    src="{% static 'users/css/img/default_profile_pic.png' %}"
+                    alt="default profile picture"
+                  />
+                  {% endif %}
+                </div>
+              </a>
+              <div>
+                <p class="username">{{ user.username }}</p>
+                {% comment %}
+                <p class="sub-text">{{ user.bio }}</p>
+                {% endcomment %}
+              </div>
+              {% if request.user != user %} {% if user.id in following %}
+              <button
+                type="button"
+                class="action-btn unfollow-btn"
+                data-userid="{{ user.id }}"
+              >
+                Unfollow
+              </button>
+              {% else %}
+              <button
+                type="button"
+                class="action-btn follow-btn"
+                data-userid="{{ user.id }}"
+              >
+                Follow
+              </button>
+              {% endif %} {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    <!-- Search Modal -->
+    <div id="searchModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="searchResults"></div>
+      </div>
+    </div>
+
+    <!-- Add Post Modal -->
+    <div id="addPostModal" class="modal-post">
+      <div class="modal-content-post">
+        <span class="close-post">&times;</span>
+        <h2>Add New Post</h2>
+        <form id="addPostForm" method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <label for="caption">Caption:</label><br />
+          <textarea id="caption" name="caption" rows="4" cols="50"></textarea
+          ><br />
+          <label for="image">Select image:</label><br />
+          <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/*"
+          /><br /><br />
+          <button type="submit" class="addPostButton">Post</button>
+        </form>
+      </div>
+    </div>
+  </body>
+  <script>
+    // Function to get the CSRF token from cookies
+    function getCSRFToken() {
+      const cookieValue = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("csrftoken="));
+      if (cookieValue) {
+        return cookieValue.split("=")[1];
+      }
+      return null;
+    }
+    document.addEventListener("DOMContentLoaded", function () {
+      //get the CSRF token
+      function getCSRFToken() {
+        const cookieValue = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("csrftoken="));
+        if (cookieValue) {
+          return cookieValue.split("=")[1];
+        }
+        return null;
+      }
+
+      // Function to handle follow action
+      function handleFollow(button) {
+        const userId = button.dataset.userid;
+        fetch(`/follow/${userId}/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(),
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success === "true") {
+              //alert("You are now following this user.");
+              // Update button text and style to "Unfollow"
+              button.textContent = "Unfollow";
+              button.classList.remove("follow-btn");
+              button.classList.add("unfollow-btn");
+              // Update event listener to handle unfollow
+              button.removeEventListener("click", followListener);
+              button.addEventListener("click", unfollowListener);
+              window.location.reload();
+            } else {
+              alert("You are already following this user.");
+            }
+          });
+      }
+
+      // Function to handle unfollow action
+      function handleUnfollow(button) {
+        const userId = button.dataset.userid;
+        fetch(`/unfollow/${userId}/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(), //csrf headers
+          },
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success === "true") {
+              //alert("You have unfollowed this user.");
+              // Update button text and style to "Follow"
+              button.textContent = "Follow";
+              button.classList.remove("unfollow-btn");
+              button.classList.add("follow-btn");
+              // Update event listener to handle follow
+              button.removeEventListener("click", unfollowListener);
+              button.addEventListener("click", followListener);
+              window.location.reload();
+            } else {
+              alert("You are not following this user.");
+            }
+          });
+      }
+
+      // Event listener for follow button
+      function followListener() {
+        handleFollow(this);
+      }
+
+      // Event listener for unfollow button
+      function unfollowListener() {
+        handleUnfollow(this);
+      }
+
+      // event listeners to follow buttons
+      document.querySelectorAll(".follow-btn").forEach(function (button) {
+        button.addEventListener("click", followListener);
+      });
+
+      // event listeners to unfollow buttons
+      document.querySelectorAll(".unfollow-btn").forEach(function (button) {
+        button.addEventListener("click", unfollowListener);
+      });
+
+      const csrfToken = "{{ csrf_token }}";
+
+      // Modal Elements
+      const userModal = document.getElementById("userModal");
+      const userModalTitle = document.getElementById("modal-title");
+      const userList = document.getElementById("user-list");
+      const closeUserModalBtn = document.querySelector("#userModal .close");
+
+      const addPostBtn = document.getElementById("addPostButton");
+      console.log(addPostBtn);
+      const addPostModal = document.getElementById("addPostModal");
+      const closeAddPostBtn = document.querySelector(
+        "#addPostModal .close-post"
+      );
+
+      // Functions to handle modals
+      function openModal(modal) {
+        modal.style.display = "block";
+      }
+
+      function closeModal(modal) {
+        modal.style.display = "none";
+      }
+
+      if (addPostBtn && addPostModal && closeAddPostBtn) {
+        addPostBtn.addEventListener("click", (event) => {
+          event.preventDefault();
+          openModal(addPostModal);
+        });
+
+        closeAddPostBtn.addEventListener("click", () => {
+          closeModal(addPostModal);
+        });
+
+        const postForm = document.getElementById("addPostForm");
+        if (postForm) {
+          postForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            const formData = new FormData(postForm);
+            fetch("/posts/add-posts/", {
+              method: "POST",
+              body: formData,
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": csrfToken,
+              },
+            })
+              .then((response) => response.json())
+              .then((response) => {
+                if (response.success) {
+                  console.log("Post added successfully");
+
+                  closeModal(addPostModal);
+                  const notify = document.getElementById("post-added");
+                  notify.textContent =
+                    "hurrey!! Post added successfully,view yourprofile";
+                  notify.style.color = "green";
+                  setTimeout(() => {
+                    notify.style.display = "none";
+                  }, 3000);
+                } else {
+                  console.error("Error adding post:", response.statusText);
+                }
+              })
+              .catch((error) => {
+                console.error("Network error:", error);
+              });
+          });
+        }
+      }
+    });
+
+    //commentss
+    // Function to add a comment or reply
+    function addComment(postId, parentId = null) {
+      const commentInput = parentId
+        ? document.getElementById(`replyInput_${parentId}`)
+        : document.getElementById(`commentInput_${postId}`);
+      const commentText = commentInput.value;
+
+      if (commentText.trim() === "") {
+        alert("Comment cannot be empty.");
+        return;
+      }
+
+      fetch(`/posts/${postId}/comment/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        body: JSON.stringify({ text: commentText, parent_id: parentId }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            commentInput.value = "";
+            if (parentId) {
+              loadReplies(parentId);
+              // Hide the reply form
+              document.getElementById(`replyForm_${parentId}`).style.display =
+                "none";
+            } else {
+              loadComments(postId);
+            }
+          } else {
+            alert("Failed to add comment.");
+          }
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+
+    window.addComment = addComment;
+
+    // Function to delete a comment
+    function deleteComment(commentId) {
+      fetch(`/comments/${commentId}/delete/`, {
+        method: "DELETE",
+        headers: {
+          "X-CSRFToken": getCSRFToken(),
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            // Remove the comment element from the DOM
+            const commentElement = document.getElementById(
+              `comment_${commentId}`
+            );
+            if (commentElement) {
+              commentElement.remove();
+            }
+          } else {
+            alert("Failed to delete comment.");
+          }
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+
+    window.deleteComment = deleteComment;
+
+    // Function to toggle the reply form
+    function toggleReplyForm(commentId) {
+      const replyForm = document.getElementById(`replyForm_${commentId}`);
+      replyForm.style.display =
+        replyForm.style.display === "none" ? "block" : "none";
+    }
+
+    window.toggleReplyForm = toggleReplyForm;
+
+    // Load comments
+    function loadComments(postId) {
+      fetch(`/posts/${postId}/comments/`, { method: "GET" })
+        .then((response) => response.json())
+        .then((data) => {
+          const commentList = document.getElementById(`commentList_${postId}`);
+          commentList.innerHTML = ""; // Clear existing comments
+
+          data.comments.forEach((comment) => {
+            const commentElement = document.createElement("div");
+            commentElement.id = `comment_${comment.id}`;
+            console.log(comment.user_id, currentUserId, comment);
+
+            commentElement.innerHTML = `
+              <div class="comment">
+                  <p>${comment.user__username}: ${comment.text}</p>
+                  <button class="reply-btn" onclick='toggleReplyForm(${
+                    comment.id
+                  })'>Reply</button>
+                  ${
+                    comment.user_id === currentUserId
+                      ? `<button class="delete-btn" onclick='deleteComment(${comment.id})'>Delete</button>`
+                      : ""
+                  }
+                  {% comment %} <button class="delete-btn" onclick='deleteComment(${
+                    comment.id
+                  })'>Delete</button> {% endcomment %}
+              </div>
+              <div id="replyForm_${comment.id}" style="display: none;">
+                  <input type="text" id="replyInput_${
+                    comment.id
+                  }" placeholder="Reply to comment">
+                  <button onclick='addComment(${postId}, ${
+              comment.id
+            })'>Post</button>
+              </div>
+              <div id="replyList_${comment.id}"></div>
+          `;
+            commentList.appendChild(commentElement);
+            loadReplies(comment.id);
+          });
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+
+    window.loadComments = loadComments;
+
+    function loadReplies(commentId) {
+      fetch(`/comments/${commentId}/replies/`, { method: "GET" })
+        .then((response) => response.json())
+        .then((data) => {
+          const replyList = document.getElementById(`replyList_${commentId}`);
+          replyList.innerHTML = ""; // Clear existing replies
+
+          data.replies.forEach((reply) => {
+            const replyElement = document.createElement("div");
+            replyElement.classList.add("comment", "reply");
+            replyElement.id = `comment_${reply.id}`;
+            console.log(reply.user_id, currentUserId);
+            replyElement.innerHTML = `
+              <div class="comment-content">
+                  <p><span class="username">${reply.user__username}</span> ${
+              reply.text
+            }</p>
+                  <button class="reply-btn" onclick='toggleReplyForm(${
+                    reply.id
+                  })'>Reply</button>
+                  ${
+                    reply.user_id === currentUserId
+                      ? `<button class="delete-btn" onclick='deleteComment(${reply.id})'>Delete</button>`
+                      : ""
+                  }
+
+                  {% comment %} <button class="delete-btn" onclick='deleteComment(${
+                    reply.id
+                  })'>Delete</button> {% endcomment %}
+                  <div id="replyForm_${reply.id}" style="display: none;">
+                      <input type="text" id="replyInput_${
+                        reply.id
+                      }" placeholder="Reply to comment">
+                      <button onclick='addComment(${reply.post_id}, ${
+              reply.id
+            })'>Post</button>
+                  </div>
+                  <div id="replyList_${reply.id}"></div>
+              </div>
+          `;
+            replyList.appendChild(replyElement);
+            loadReplies(reply.id); // Load nested replies
+          });
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+
+    window.loadReplies = loadReplies;
+
+    // Load comments for each post
+    document.querySelectorAll(".post").forEach((post) => {
+      const postId = post.id.split("_")[1];
+      loadComments(postId);
+    });
+
+    function handleCommentIconClick(postId) {
+      const cmtDiv = document.getElementById(`commentList_${postId}`);
+      if (cmtDiv.childElementCount) {
+        cmtDiv.style.display = "none";
+      } else {
+        loadComments(postId);
+      }
+    }
+
+    document.querySelectorAll(".comment-icon").forEach((icon) => {
+      const postId = icon.dataset.postid;
+      icon.addEventListener("click", () => handleCommentIconClick(postId));
+    });
+
+    //toggle like
+    function toggleLike(postId) {
+      fetch(`/posts/${postId}/like/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        body: JSON.stringify({}),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          const likeBtn = document.getElementById(`likeBtn_${postId}`);
+          const likeCount = document.getElementById(`likeCount_${postId}`);
+
+          if (data.liked) {
+            likeBtn.src = likeRedUrl;
+          } else {
+            likeBtn.src = likeUrl;
+          }
+          likeCount.innerText = `${data.total_likes}  likes`;
+        })
+        .catch((error) => console.error("Error:", error));
+    }
+
+    // search key press
+    function handleSearchKeyPress(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        performSearch();
+      }
+    }
+
+    // Perform search operation
+    function performSearch() {
+      const query = document.getElementById("searchInput").value;
+      fetch(`/search_users/?q=${query}`, { method: "GET" })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          const searchResults = document.getElementById("searchResults");
+          searchResults.innerHTML = "";
+          data.users.forEach((user) => {
+            const userElement = document.createElement("div");
+            userElement.classList.add("profile-card1");
+            const profilePicUrl = user.profile_pic
+              ? `/media/${user.profile_pic}`
+              : '{% static "users/css/img/default_profile_pic.png" %}';
+            userElement.innerHTML = `
+                    <a href="/users/${user.id}">
+                      <div class="profile-pic">
+                          <img src="${profilePicUrl}" alt="profile picture">
+                      </div>
+                      <div>
+                          <p class="username">${user.username}</p>
+                      </div>
+                  </a>
+                  {% comment %} <button type="button" class="action-btn ${
+                    user.following ? "unfollow-btn" : "follow-btn"
+                  }" data-userid="${user.id}">
+                      ${user.following ? "Unfollow" : "Follow"}
+                  </button> {% endcomment %}
+              `;
+            searchResults.appendChild(userElement);
+          });
+          openModal();
+        });
+    }
+
+    // Open modal
+    function openModal() {
+      const modal = document.getElementById("searchModal");
+      modal.style.display = "block";
+    }
+
+    // Close modal
+    document.querySelector(".close").onclick = function () {
+      const modal = document.getElementById("searchModal");
+      modal.style.display = "none";
+    };
+
+    // Close modal when clicking outside
+    window.onclick = function (event) {
+      const modal = document.getElementById("searchModal");
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    };
+  </script>
+</html>

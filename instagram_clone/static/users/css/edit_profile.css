@@ -1,0 +1,97 @@
+/* edit_profile.css */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+}
+
+form {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile-user-settings {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.profile-user-settings label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.profile-user-settings input[type="text"],
+.profile-user-settings textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.profile-user-settings button {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.profile-user-settings button:hover {
+    background-color: #0056b3;
+}
+
+.profile-image {
+    text-align: center;
+}
+
+.profile-image img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ddd;
+    margin-bottom: 20px;
+}
+
+.profile-image input[type="file"] {
+    display: block;
+    margin-top: 10px;
+}
+
+.profile-bio {
+    text-align: center;
+    font-style: italic;
+    margin-top: 20px;
+}
+
+.profile-stats ul {
+    display: flex;
+    justify-content: center;
+    padding: 0;
+}
+
+.profile-stats ul li {
+    margin: 0 20px;
+    font-size: 18px;
+}
+
+.profile-stats .profile-stat-count {
+    font-weight: bold;
+}
+
+@media screen and (max-width: 600px) {
+    form {
+        padding: 10px;
+    }
+}
+

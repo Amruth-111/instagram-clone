@@ -1,0 +1,46 @@
+{%load static%}
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>edit_page</title>
+
+    <link rel="stylesheet" href="{% static 'users/css/edit_profile.css' %}" />
+  </head>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="profile-user-settings">
+      <label for="username">Name:</label>
+      <input
+        type="text"
+        name="username"
+        value="{{ user.username }}"
+        placeholder="Username"
+      />
+      <label for="bio">Bio:</label>
+      <textarea name="bio" placeholder="Bio">{{ user.bio }}</textarea>
+      <button type="submit" class="btn profile-edit-btn">Save Changes</button>
+    </div>
+
+    
+    <div class="profile-stats">
+      <ul>
+        <li><span class="profile-stat-count">0</span> posts</li>
+        <li><span class="profile-stat-count">{{ user_followers }}</span> followers</li>
+        <li><span class="profile-stat-count">{{ user_following }}</span> following</li>
+      </ul>
+    </div>
+
+    <div class="profile-bio">
+      <p>{{user.bio}}</p>
+    </div>
+
+    <div class="profile-image">
+      {% if user.profile_pic %}
+      <img src="{{ user.profile_pic.url }}" alt="" />
+      {% else %}
+      <p>No profile picture yet.</p>
+      {% endif %}
+      <input type="file" name="profile_pic" accept="image/*" />
+    </div>
+  </form>
+</html>

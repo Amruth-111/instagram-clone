@@ -1,0 +1,430 @@
+{% load static %} {% load likes_extras %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Post Detail</title>
+    <link rel="stylesheet" href="{% static 'users/css/view_post.css' %}" />
+    <script>
+      const likeRedUrl = "{% static 'users/css/img/like-red.png' %}";
+      const likeUrl = "{% static 'users/css/img/like.PNG' %}";
+      const currentUserId = {{ current_user_id }}
+    </script>
+  </head>
+  <body>
+    <div class="post" id="post-{{ post.id }}">
+      <div class="info">
+        <div class="user">
+          <div class="profile-pic">
+            <img src="{{ user_profile.profile_pic.url }}" alt="" />
+          </div>
+          <p class="username">{{ user_profile.username }}</p>
+        </div>
+        {% if is_own_post %}
+        <img
+          src="{% static 'users/css/img/option.PNG' %}"
+          class="options"
+          alt="options"
+          id="options-btn"
+        />
+        <div id="post-options" class="post-options">
+          <button id="edit-btn">Edit</button>
+          <button id="delete-btn">Delete</button>
+        </div>
+        {% endif %}
+      </div>
+      <img src="{{ post.image.url }}" class="post-image" alt="post image" />
+      <div class="post-content">
+        <div class="reaction-wrapper">
+          <button class="like-btn" onclick="toggleLike({{ post.id }})">
+            {% if post|has_liked:request.user %}
+            <img
+              src="{% static 'users/css/img/like-red.png' %}"
+              class="icon like-icon"
+              alt="liked"
+              id="likeBtn_{{ post.id }}"
+            />
+            {% else %}
+            <img
+              src="{% static 'users/css/img/like.PNG' %}"
+              class="icon like-icon"
+              alt="like"
+              id="likeBtn_{{ post.id }}"
+            />
+            {% endif %}
+          </button>
+          <img
+            src="{% static 'users/css/img/comment.PNG' %}"
+            class="icon comment-icon"
+            alt="comment"
+            data-postid="{{ post.id }}"
+            onclick="handleCommentIconClick({{ post.id }})"
+          />
+          <img
+            src="{% static 'users/css/img/send.PNG' %}"
+            class="icon"
+            alt="send"
+          />
+          <img
+            src="{% static 'users/css/img/save.PNG' %}"
+            class="save icon"
+            alt="save"
+          />
+        </div>
+        <p class="likes" id="likeCount_{{post.id}}">
+          {{ post.total_likes }} likes
+        </p>
+        <p>{{comment_count}} Comments</p>
+        <p class="description">
+          <span>{{ post.user.username }}</span>
+          <span1 id="post-caption">{{ post.caption }}</span1>
+        </p>
+        <p class="post-time">{{ post.created_at|timesince }} ago</p>
+      </div>
+
+      <div class="comments" id="commentList_{{ post.id }}">
+        <!-- Comments will be dynamically loaded here -->
+      </div>
+
+      <div class="comment-wrapper">
+        <img
+          src="{% static 'users/css/img/smile.PNG' %}"
+          class="icon"
+          alt="smile"
+        />
+        <input
+          type="text"
+          class="comment-box"
+          placeholder="Add a comment"
+          id="commentInput_{{ post.id }}"
+          name="comments"
+        />
+        <button class="comment-btn" onclick="addComment({{ post.id }})">
+          Post
+        </button>
+      </div>
+    </div>
+
+    <!-- Edit Post Modal -->
+    <div id="edit-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <form id="edit-post-form" method="POST">
+          {% csrf_token %}
+          <h2>Edit Post</h2>
+          <label for="post-caption">Caption</label>
+          <textarea id="post-caption" name="caption">
+{{ post.caption }}</textarea
+          >
+          <button type="submit">Save Changes</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+            // Function to toggle the reply form
+        function toggleReplyForm(commentId) {
+          const replyForm = document.getElementById(`replyForm_${commentId}`);
+          replyForm.style.display =
+            replyForm.style.display === "none" ? "block" : "none";
+        }
+        function getCSRFToken() {
+          const cookieValue = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("csrftoken="));
+          if (cookieValue) {
+            return cookieValue.split("=")[1];
+          }
+          return null;
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+          const optionsBtn = document.getElementById("options-btn");
+          const postOptions = document.getElementById("post-options");
+          const editBtn = document.getElementById("edit-btn");
+          const deleteBtn = document.getElementById("delete-btn");
+          console.log(deleteBtn);
+          const editModal = document.getElementById("edit-modal");
+          const closeBtn = document.querySelector(".close-btn");
+          const editForm = document.getElementById("edit-post-form");
+          const postCaption = document.getElementById("post-caption");
+          const postElement = document.getElementById("post-{{ post.id }}");
+          console.log(postElement);
+
+          if (optionsBtn) {
+            optionsBtn.addEventListener("click", function () {
+              postOptions.style.display =
+                postOptions.style.display === "none" ? "block" : "none";
+            });
+          }
+
+          if (editBtn) {
+            editBtn.addEventListener("click", function () {
+              editModal.style.display = "block";
+            });
+          }
+
+          if (closeBtn) {
+            closeBtn.addEventListener("click", function () {
+              editModal.style.display = "none";
+            });
+          }
+
+          window.onclick = function (event) {
+            if (event.target === editModal) {
+              editModal.style.display = "none";
+            }
+          };
+
+          editForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const csrfToken = document.querySelector(
+              "[name=csrfmiddlewaretoken]"
+            ).value;
+            const formData = new FormData(editForm);
+            const postData = {
+              method: "POST",
+              headers: {
+                "X-CSRFToken": csrfToken,
+              },
+              body: formData,
+            };
+
+            fetch("{% url 'edit_post' post.id %}", postData)
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.status === "success") {
+                  editModal.style.display = "none";
+                  let b = document.querySelector(".description ");
+                  console.log(b);
+                  document.querySelector(".description #post-caption").innerText =
+                    formData.get("caption");
+                } else {
+                  alert("Error updating post.");
+                }
+              })
+              .catch((error) => {
+                console.error("Error:", error);
+                alert("Error updating post.");
+              });
+          });
+
+          deleteBtn.addEventListener("click", function () {
+            const csrfToken = document.querySelector(
+              "[name=csrfmiddlewaretoken]"
+            ).value;
+            const deleteData = {
+              method: "POST",
+              headers: {
+                "X-CSRFToken": csrfToken,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ post_id: "{{ post.id }}" }),
+            };
+
+            fetch("{% url 'delete_post' post.id %}", deleteData)
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.status === "success") {
+                  postElement.remove();
+                  window.location.href = "/profile/";
+                } else {
+                  alert("Error deleting post.");
+                }
+              })
+              .catch((error) => {
+                console.error("Error:", error);
+                alert("Error deleting post.");
+              });
+          });
+
+
+        });
+            //commentss
+            function addComment(postId, parentId = null) {
+              const commentInput = parentId
+                  ? document.getElementById(`replyInput_${parentId}`)
+                  : document.getElementById(`commentInput_${postId}`);
+              const commentText = commentInput.value;
+            
+              if (commentText.trim() === "") {
+                  alert("Comment cannot be empty.");
+                  return;
+              }
+            
+              fetch(`/posts/${postId}/comment/`, {
+                  method: "POST",
+                  headers: {
+                      "Content-Type": "application/json",
+                      "X-CSRFToken": getCSRFToken(),
+                  },
+                  body: JSON.stringify({ text: commentText, parent_id: parentId }),
+              })
+              .then((response) => response.json())
+              .then((data) => {
+                  if (data.success) {
+                      commentInput.value = "";
+                      if (parentId) {
+                          loadReplies(parentId);
+                          // Hide the reply form
+                          document.getElementById(`replyForm_${parentId}`).style.display = "none";
+                      } else {
+                          loadComments(postId);
+                      }
+                  } else {
+                      alert("Failed to add comment.");
+                  }
+              })
+              .catch((error) => console.error("Error:", error));
+            }
+            
+            window.addComment = addComment;
+            
+            // Function to delete a comment
+            function deleteComment(commentId) {
+              fetch(`/comments/${commentId}/delete/`, {
+                  method: "DELETE",
+                  headers: {
+                      "X-CSRFToken": getCSRFToken(),
+                  },
+              })
+              .then((response) => response.json())
+              .then((data) => {
+                  if (data.success) {
+                      // Remove the comment element from the DOM
+                      const commentElement = document.getElementById(`comment_${commentId}`);
+                      if (commentElement) {
+                          commentElement.remove();
+                      }
+                  } else {
+                      alert("Failed to delete comment.");
+                  }
+              })
+              .catch((error) => console.error("Error:", error));
+            }
+            
+            window.deleteComment = deleteComment;
+            
+            
+     
+            
+            window.toggleReplyForm = toggleReplyForm;
+            
+            // Load comments
+            function loadComments(postId) {
+              fetch(`/posts/${postId}/comments/`, { method: "GET" })
+              .then((response) => response.json())
+              .then((data) => {
+                  const commentList = document.getElementById(`commentList_${postId}`);
+                  commentList.innerHTML = ""; // Clear existing comments
+            
+                  data.comments.forEach((comment) => {
+                      const commentElement = document.createElement("div");
+                      commentElement.id = `comment_${comment.id}`;
+                      console.log(comment.user_id ,currentUserId,comment)
+            
+                      commentElement.innerHTML = `
+                          <div class="comment">
+                              <p>${comment.user__username}: ${comment.text}</p>
+                              <button class="reply-btn" onclick='toggleReplyForm(${comment.id})'>Reply</button>
+                              ${comment.user_id === currentUserId ? `<button class="delete-btn" onclick='deleteComment(${comment.id})'>Delete</button>` : ''}
+                              {% comment %} <button class="delete-btn" onclick='deleteComment(${comment.id})'>Delete</button> {% endcomment %}
+                          </div>
+                          <div id="replyForm_${comment.id}" style="display: none;">
+                              <input type="text" id="replyInput_${comment.id}" placeholder="Reply to comment">
+                              <button onclick='addComment(${postId}, ${comment.id})'>Post</button>
+                          </div>
+                          <div id="replyList_${comment.id}"></div>
+                      `;
+                      commentList.appendChild(commentElement);
+                      loadReplies(comment.id);
+                  });
+              })
+              .catch((error) => console.error("Error:", error));
+            }
+            
+            window.loadComments = loadComments;
+            
+            function loadReplies(commentId) {
+              fetch(`/comments/${commentId}/replies/`, { method: "GET" })
+              .then((response) => response.json())
+              .then((data) => {
+                  const replyList = document.getElementById(`replyList_${commentId}`);
+                  replyList.innerHTML = ""; // Clear existing replies
+            
+                  data.replies.forEach((reply) => {
+                      const replyElement = document.createElement("div");
+                      replyElement.classList.add("comment", "reply");
+                      replyElement.id = `comment_${reply.id}`;
+                      console.log(reply.user_id,currentUserId)
+                      replyElement.innerHTML = `
+                          <div class="comment-content">
+                              <p><span class="username">${reply.user__username}</span> ${reply.text}</p>
+                              <button class="reply-btn" onclick='toggleReplyForm(${reply.id})'>Reply</button>
+                              ${reply.user_id === currentUserId ? `<button class="delete-btn" onclick='deleteComment(${reply.id})'>Delete</button>` : ''}
+            
+                              {% comment %} <button class="delete-btn" onclick='deleteComment(${reply.id})'>Delete</button> {% endcomment %}
+                              <div id="replyForm_${reply.id}" style="display: none;">
+                                  <input type="text" id="replyInput_${reply.id}" placeholder="Reply to comment">
+                                  <button onclick='addComment(${reply.post_id}, ${reply.id})'>Post</button>
+                              </div>
+                              <div id="replyList_${reply.id}"></div>
+                          </div>
+                      `;
+                      replyList.appendChild(replyElement);
+                      loadReplies(reply.id); // Load nested replies
+                  });
+              })
+              .catch((error) => console.error("Error:", error));
+            }
+            
+            window.loadReplies = loadReplies;
+            
+            // Load comments for each post
+            document.querySelectorAll(".post").forEach((post) => {
+              const postId = post.id.split("_")[1];
+              loadComments(postId);
+            });
+            
+            function handleCommentIconClick(postId) {
+              const cmtDiv = document.getElementById(`commentList_${postId}`);
+              if (cmtDiv.childElementCount) {
+                  cmtDiv.style.display = "none";
+              } else {
+                  loadComments(postId);
+              }
+            }
+            
+            document.querySelectorAll(".comment-icon").forEach((icon) => {
+              const postId = icon.dataset.postid;
+              icon.addEventListener("click", () => handleCommentIconClick(postId));
+            });
+            
+        function toggleLike(postId) {
+          fetch(`/posts/${postId}/like/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": getCSRFToken(),
+            },
+            body: JSON.stringify({}),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              const likeBtn = document.getElementById(`likeBtn_${postId}`);
+              const likeCount = document.getElementById(`likeCount_${postId}`);
+
+              if (data.liked) {
+                likeBtn.src = likeRedUrl;
+              } else {
+                likeBtn.src = likeUrl;
+              }
+              likeCount.innerText = `${data.total_likes}  likes`;
+              console.log(data.total_likes);
+            })
+            .catch((error) => console.error("Error:", error));
+        }
+    </script>
+  </body>
+</html>
